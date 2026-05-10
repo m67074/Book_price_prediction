@@ -55,12 +55,12 @@ print(f"Максимальна ціна: {max_price:.2f}")
 
 # Оцінки моделей
 def evaluate_model(y_true, y_pred, model_name):
-    mae = mean_absolute_error(y_true, y_pred)
-    mse = mean_squared_error(y_true, y_pred)
+    mae = mean_absolute_error(y_true, y_pred) # Розрахунок середньої абсолютної помилки
+    mse = mean_squared_error(y_true, y_pred) # Розрахунок середньої квадратичної помилки
     # Додаємо невелике значення до y_true, щоб уникнути ділення на нуль при обчисленні MAPE
     mape = np.mean(np.abs((y_true - y_pred) / (y_true + 1e-10))) * 100
-    r2 = r2_score(y_true, y_pred)
-    accuracy = 100 - mape
+    r2 = r2_score(y_true, y_pred) # Розрахунок коефіцієнта детермінації R2
+    accuracy = 100 - mape # Розрахунок точності у відсотках
     print(f"\n{model_name} Model Evaluation:") # Adjusted print statement to be generic
     print(f"  Mean Absolute Error (MAE): {mae:.2f}")
     print(f"  Mean Squared Error (MSE): {mse:.2f}")
@@ -80,14 +80,14 @@ def plot_predictions(y_true, y_pred, model_title, plot_color):
         model_title (str): Title for the plot and Y-axis label.
         plot_color (str): Color for the scatter points.
     """
-    plt.figure(figsize=(10, 10))
-    plt.scatter(y_true, y_pred, alpha=0.7, color=plot_color)
-    plt.plot([min(y_true), max(y_true)], [min(y_true), max(y_true)], '--r', linewidth=2)
-    plt.xlabel('Actual Prices')
-    plt.ylabel(f'Predicted Prices ({model_title})')
-    plt.title(f'Actual vs. Predicted Prices ({model_title})')
-    plt.grid(True)
-    plt.show()
+    plt.figure(figsize=(10, 10)) # Встановлення розміру графіка
+    plt.scatter(y_true, y_pred, alpha=0.7, color=plot_color) # Побудова точкового графіка: реальні vs прогнозовані ціни
+    plt.plot([min(y_true), max(y_true)], [min(y_true), max(y_true)], '--r', linewidth=2) # Ideal prediction line
+    plt.xlabel('Actual Prices') # Підпис осі X
+    plt.ylabel(f'Predicted Prices ({model_title})') # Підпис осі Y
+    plt.title(f'Actual vs. Predicted Prices ({model_title})') # Заголовок графіка
+    plt.grid(True) # Увімкнення сітки
+    plt.show() # Відображення графіка
 
 # Визначення точок даних з найбільшими помилками прогнозування
 def display_top_errors(y_true, y_pred, model_name, top_n=10):
@@ -100,8 +100,8 @@ def display_top_errors(y_true, y_pred, model_name, top_n=10):
         model_name (str): Name of the model for display purposes.
         top_n (int): The number of top errors to display.
     """
-    errors_df = pd.DataFrame({'Actual': y_true, 'Predicted': y_pred, 'Absolute_Error': np.abs(y_true - y_pred)})
-    errors_df = errors_df.sort_values(by='Absolute_Error', ascending=False)
+    errors_df = pd.DataFrame({'Actual': y_true, 'Predicted': y_pred, 'Absolute_Error': np.abs(y_true - y_pred)}) # Створення DataFrame з помилками
+    errors_df = errors_df.sort_values(by='Absolute_Error', ascending=False) # Сортування за абсолютною помилкою
     print(f"\nTop {top_n} data points with the largest prediction errors for {model_name}:")
     display.display(errors_df.head(top_n))
 
@@ -174,15 +174,11 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 
 # Оцінка моделі
-# Розрахунок середньої абсолютної помилки
 mae = mean_absolute_error(y_test, y_pred)
-# Розрахунок коефіцієнта детермінації R2
 r2 = r2_score(y_test, y_pred)
-# Розрахунок середньої квадратичної помилки
 mse = mean_squared_error(y_test, y_pred)
 # Розрахунок середньої абсолютної відсоткової помилки (MAPE)
 mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
-# Розрахунок точності у відсотках
 accuracy_in_percent = 100 - mape
 
 print("\nОцінка точності моделі:")
