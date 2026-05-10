@@ -118,10 +118,6 @@ def display_top_errors(y_true, y_pred, model_name, top_n=10):
 df['Price'] = pd.to_numeric(df['Price'], errors='coerce')
 
 # Очищення стовпців 'Reviews' та 'Ratings' для вилучення числових значень
-# df['Reviews'] = df['Reviews'].astype(str).str.extract('(\\d+\\.?\\d*)').astype(float)
-# df['Ratings'] = df['Ratings'].astype(str).str.extract('(\\d+)').astype(float)
-# df['Reviews'] = df['Reviews'].astype(str).str.extract('(\d+\.?\d*)').astype(float)
-# df['Ratings'] = df['Ratings'].astype(str).str.extract('(\d+)').astype(float)
 df['Reviews'] = df['Reviews'].astype(str).str.extract(r'(\d+\.?\d*)').astype(float)
 df['Ratings'] = df['Ratings'].astype(str).str.extract(r'(\d+)').astype(float)
 
@@ -194,38 +190,6 @@ display_top_errors(y_test, y_pred, "Linear Regression")
 
 # -----------------------
 
-# Оцінка моделі
-# mae = mean_absolute_error(y_test, y_pred)
-# r2 = r2_score(y_test, y_pred)
-# mse = mean_squared_error(y_test, y_pred)
-# Розрахунок середньої абсолютної відсоткової помилки (MAPE)
-# mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
-# accuracy_in_percent = 100 - mape
-
-# print("\nОцінка точності моделі:")
-# print(f"Mean Absolute Error (MAE): {mae:.2f}") # Mean Absolute Error — Середня абсолютна помилка
-# print(f"Mean Squared Error (MSE): {mse:.2f}") # Mean Squared Error — Середня квадратична помилка
-# print(f"Mean Absolute Percentage Error (MAPE): {mape:.2f}%") # Mean Absolute Percentage Error — Середня абсолютна відсоткова помилка
-# print(f"R-squared (R2) score: {r2:.2f}")
-# print(f"Точність: {accuracy_in_percent:.2f}%") # Те саме число у відсотках
-
-# Графік порівняння реальних цін із прогнозованими моделлю лінійної регресії
-# plt.figure(figsize=(10, 10))
-# plt.scatter(y_test, y_pred, alpha=0.7, color='orange')
-# plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ideal prediction line
-# plt.xlabel('Actual Prices')
-# plt.ylabel('Predicted Prices (Linear Model)')
-# plt.title('Actual vs. Predicted Prices (Linear Regression Model)')
-# plt.grid(True)
-# plt.show()
-
-# Identify data points with the largest prediction errors
-# errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred, 'Absolute_Error': np.abs(y_test - y_pred)})
-# errors = errors.sort_values(by='Absolute_Error', ascending=False)
-
-# print("\nTop 10 data points with the largest prediction errors:")
-# display.display(errors.head(10))
-
 # -----------------------
 # Ініціалізація моделі лінійної регресії для поліноміальних ознак
 poly_model = LinearRegression()
@@ -246,35 +210,6 @@ plot_predictions(y_test, y_pred_poly, "Polynomial Regression", 'purple')
 display_top_errors(y_test, y_pred_poly, "Polynomial Regression")
 
 # -----------------------
-
-# Оцінка моделі
-# mae_poly = mean_absolute_error(y_test, y_pred_poly)
-# r2_poly = r2_score(y_test, y_pred_poly)
-# mse_poly = mean_squared_error(y_test, y_pred_poly)
-# mape_poly = np.mean(np.abs((y_test - y_pred_poly) / (y_test + 1e-10))) * 100
-# accuracy_poly = 100 - mape_poly
-
-# print(f"Mean Absolute Error (MAE): {mae_poly:.2f}") # Mean Absolute Error — Середня абсолютна помилка
-# print(f"Mean Squared Error (MSE): {mse_poly:.2f}") # Mean Squared Error — Середня квадратична помилка
-# print(f"Mean Absolute Percentage Error (MAPE): {mape_poly:.2f}%") # Mean Absolute Percentage Error — Середня абсолютна відсоткова помилка
-# print(f"R-squared (R2) score: {r2_poly:.2f}")
-# print(f"Точність моделі: {accuracy_poly:.2f}%")
-
-# plt.figure(figsize=(10, 10))
-# plt.scatter(y_test, y_pred_poly, alpha=0.7, color='purple') 
-# plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ideal prediction line
-# plt.xlabel('Actual Prices')
-# plt.ylabel('Predicted Prices (Polynomial Regression)')
-# plt.title('Actual vs. Predicted Prices (Polynomial Regression)')
-# plt.grid(True)
-# plt.show()
-
-# Identify data points with the largest prediction errors
-# errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_poly, 'Absolute_Error': np.abs(y_test - y_pred_poly)})
-# errors = errors.sort_values(by='Absolute_Error', ascending=False)
-
-# print("\nTop 10 data points with the largest prediction errors:")
-# display.display(errors.head(10))
 
 # -----------------------
 
@@ -312,69 +247,6 @@ display_top_errors(y_test, y_pred_ridge, "Ridge Regression")
 
 # -----------------------
 
-# Evaluate Elastic Net model
-# mae_elastic = mean_absolute_error(y_test, y_pred_elastic)
-# r2_elastic = r2_score(y_test, y_pred_elastic)
-# mse_elastic = mean_squared_error(y_test, y_pred_elastic)
-
-# mape_elastic = np.mean(np.abs((y_test - y_pred_elastic) / (y_test + 1e-10))) * 100
-# accuracy_elastic = 100 - mape_elastic
-
-# print("Elastic Net Model Evaluation:")
-# print(f"  Mean Absolute Error (MAE): {mae_elastic:.2f}") # Mean Absolute Error — Середня абсолютна помилка
-# print(f"Mean Squared Error (MSE): {mse_elastic:.2f}") # Mean Squared Error — Середня квадратична помилка
-# print(f"Mean Absolute Percentage Error (MAPE): {mape_elastic:.2f}%") # Середня абсолютна відсоткова помилка
-# print(f"  R-squared (R2): {r2_elastic:.2f}")
-# print(f"Точність моделі: {accuracy_elastic:.2f}%")
-
-# plt.figure(figsize=(10, 10))
-# plt.scatter(y_test, y_pred_elastic, alpha=0.7)
-# plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ideal prediction line
-# plt.xlabel('Actual Prices')
-# plt.ylabel('Predicted Prices (Elastic Net Model)')
-# plt.title('Actual vs. Predicted Prices (Elastic Net Model)')
-# plt.grid(True)
-# plt.show()
-
-# Identify data points with the largest prediction errors
-# errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_elastic, 'Absolute_Error': np.abs(y_test - y_pred_elastic)})
-# errors = errors.sort_values(by='Absolute_Error', ascending=False)
-
-# print("\nTop 10 data points with the largest prediction errors:")
-# display.display(errors.head(10))
-
-
-# Evaluate Ridge model
-# mae_ridge = mean_absolute_error(y_test, y_pred_ridge)
-# r2_ridge = r2_score(y_test, y_pred_ridge)
-# mse_ridge = mean_squared_error(y_test, y_pred_ridge)
-
-# mape_ridge = np.mean(np.abs((y_test - y_pred_ridge) / (y_test + 1e-10))) * 100
-# accuracy_ridge = 100 - mape_ridge
-
-# print("\nRidge Model Evaluation:")
-# print(f"Mean Absolute Error (MAE): {mae_ridge:.2f}") # Mean Absolute Error — Середня абсолютна помилка
-# print(f"Mean Squared Error (MSE): {mse_ridge:.2f}") # Mean Squared Error — Середня квадратична помилка
-# print(f"Mean Absolute Percentage Error (MAPE): {mape_ridge:.2f}%") # Mean Absolute Percentage Error — Середня абсолютна відсоткова помилка
-# print(f"  R-squared (R2): {r2_ridge:.2f}")
-# print(f"Точність моделі: {accuracy_ridge:.2f}%")
-
-# plt.figure(figsize=(10, 10))
-# plt.scatter(y_test, y_pred_ridge, alpha=0.7, color='green')
-# plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ideal prediction line
-# plt.xlabel('Actual Prices')
-# plt.ylabel('Predicted Prices (Ridge Model)')
-# plt.title('Actual vs. Predicted Prices (Ridge Model)')
-# plt.grid(True)
-# plt.show()
-
-# Identify data points with the largest prediction errors
-# errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_ridge, 'Absolute_Error': np.abs(y_test - y_pred_ridge)})
-# errors = errors.sort_values(by='Absolute_Error', ascending=False)
-
-# print("\nTop 10 data points with the largest prediction errors:")
-# display.display(errors.head(10))
-
 # -----------------------
 
 # Train the model
@@ -394,37 +266,6 @@ plot_predictions(y_test, y_pred_rf, "RandomForestRegressor Model", 'yellow')
 display_top_errors(y_test, y_pred_rf, "RandomForestRegressor")
 
 # -----------------------
-
-# Оцінка моделі RandomForestRegressor
-# mae_rf = mean_absolute_error(y_test, y_pred_rf)
-# r2_rf = r2_score(y_test, y_pred_rf)
-# mse_rf = mean_squared_error(y_test, y_pred_rf)
-
-# mape_rf = np.mean(np.abs((y_test - y_pred_rf) / (y_test + 1e-10))) * 100
-# accuracy_rf = 100 - mape_rf
-
-# print("\nRandomForestRegressor Model Evaluation:")
-# print(f"Mean Absolute Error (MAE): {mae_rf:.2f}") # Mean Absolute Error — Середня абсолютна помилка
-# print(f"Mean Squared Error (MSE): {mse_rf:.2f}") # Mean Squared Error — Середня квадратична помилка
-# print(f"Mean Absolute Percentage Error (MAPE): {mape_rf:.2f}%") # Mean Absolute Percentage Error — Середня абсолютна відсоткова помилка
-# print(f"  R-squared (R2): {r2_rf:.2f}")
-# print(f"Точність моделі: {accuracy_rf:.2f}%")
-
-# plt.figure(figsize=(10, 10))
-# plt.scatter(y_test, y_pred_rf, alpha=0.7, color='yellow')
-# plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ideal prediction line
-# plt.xlabel('Actual Prices')
-# plt.ylabel('Predicted Prices (RandomForestRegressor Model)')
-# plt.title('Actual vs. Predicted Prices (RandomForestRegressor Regression Model)')
-# plt.grid(True)
-# plt.show()
-
-# Identify data points with the largest prediction errors
-# errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_rf, 'Absolute_Error': np.abs(y_test - y_pred_rf)})
-# errors = errors.sort_values(by='Absolute_Error', ascending=False)
-
-# print("\nTop 10 data points with the largest prediction errors:")
-# display.display(errors.head(10))
 
 # -----------------------
 
@@ -446,36 +287,6 @@ display_top_errors(y_test, y_pred_gbr, "GradientBoostingRegressor")
 
 # -----------------------
 
-# Evaluate the GradientBoostingRegressor model
-# mae_gbr = mean_absolute_error(y_test, y_pred_gbr)
-# r2_gbr = r2_score(y_test, y_pred_gbr)
-# mse_gbr = mean_squared_error(y_test, y_pred_gbr)
-
-# mape_gbr = np.mean(np.abs((y_test - y_pred_gbr) / (y_test + 1e-10))) * 100
-# accuracy_gbr = 100 - mape_gbr
-
-# print("\nGradientBoostingRegressor Model Evaluation:")
-# print(f"Mean Absolute Error (MAE): {mae_gbr:.2f}")
-# print(f"Mean Squared Error (MSE): {mse_gbr:.2f}")
-# print(f"Mean Absolute Percentage Error (MAPE): {mape_gbr:.2f}%")
-# print(f"  R-squared (R2): {r2_gbr:.2f}")
-# print(f"Точність моделі: {accuracy_gbr:.2f}%")
-
-# plt.figure(figsize=(10, 10))
-# plt.scatter(y_test, y_pred_gbr, alpha=0.7, color='brown')
-# plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ideal prediction line
-# plt.xlabel('Actual Prices')
-# plt.ylabel('Predicted Prices (GradientBoostingRegressor Model)')
-# plt.title('Actual vs. Predicted Prices (GradientBoostingRegressor Model)')
-# plt.grid(True)
-# plt.show()
-
-# Identify data points with the largest prediction errors
-# errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_gbr, 'Absolute_Error': np.abs(y_test - y_pred_gbr)})
-# errors = errors.sort_values(by='Absolute_Error', ascending=False)
-
-# print("\nTop 10 data points with the largest prediction errors:")
-# display.display(errors.head(10))
 
 # Порівняння R2-оцінок моделей
 
