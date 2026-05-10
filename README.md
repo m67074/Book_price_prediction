@@ -468,7 +468,259 @@ results = pd.DataFrame({
 display.display(results.sort_values(by='R2 Score', ascending=False))
 # ==============
 
+import numpy as np # Імпорт бібліотеки NumPy для числових операцій
+import pandas as pd # Імпорт бібліотеки Pandas для роботи з табличними даними (DataFrame)
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error # Імпорт метрик для оцінки моделі
+from sklearn.linear_model import LinearRegression, ElasticNet, Ridge # Імпорт моделей лінійної регресії, ElasticNet і Ridge
+from sklearn.model_selection import train_test_split # Імпорт функції для розділення даних на тренувальні та тестові набори
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor # Імпорт ансамблевих моделей регресії
+from sklearn.preprocessing import PolynomialFeatures, LabelEncoder, StandardScaler # Імпорт інструментів для попередньої обробки даних
+import re # Імпорт модуля для роботи з регулярними виразами
+import matplotlib.pyplot as plt # Імпорт бібліотеки Matplotlib для візуалізації даних
+import io # Імпорт модуля для роботи з потоками вводу/виводу
+import base64 # Імпорт модуля для кодування/декодування Base64
+import IPython.display as display # Імпорт модуля для відображення об'єктів в IPython
 
+# Завантаження даних
+# df = pd.read_excel('train.xlsx') # Закоментований рядок для завантаження даних з Excel
+df = pd.read_csv('/content/Book price/train.csv', encoding='latin1', sep=';') # Завантаження даних з CSV-файлу
+
+df.info() # Виведення інформації про DataFrame (типи даних, кількість ненульових значень)
+
+print(f"Оригінальний розмір DataFrame: {len(df)} рядків")
+print(f"Розмір DataFrame після видалення викидів: {len(df_no_outliers)} рядків")
+print(f"Кількість видалених викидів: {len(df) - len(df_no_outliers)}")
+
+def evaluate_model(y_true, y_pred, model_name):
+    mae = mean_absolute_error(y_true, y_pred)
+    mse = mean_squared_error(y_true, y_pred)
+    # Додаємо невелике значення до y_true, щоб уникнути ділення на нуль при обчисленні MAPE
+    mape = np.mean(np.abs((y_true - y_pred) / (y_true + 1e-10))) * 100 
+    r2 = r2_score(y_true, y_pred)
+    accuracy = 100 - mape
+    print(f"\n{model_name} Model Evaluation (Cleaned Data):")
+    print(f"  Mean Absolute Error (MAE): {mae:.2f}")
+    print(f"  Mean Squared Error (MSE): {mse:.2f}")
+    print(f"  Mean Absolute Percentage Error (MAPE): {mape:.2f}%")
+    print(f"  R-squared (R2): {r2:.2f}")
+    print(f"  Accuracy: {accuracy:.2f}%")
+    return mae, mse, mape, r2, accuracy
+
+# --- Початок доданої попередньої обробки даних для самостійного виконання ---
+# Перетворення стовпця 'Price' на числовий формат, NaN для некоректних значень
+df['Price'] = pd.to_numeric(df['Price'], errors='coerce')
+
+# Очищення стовпців 'Reviews' та 'Ratings' для вилучення числових значень
+df['Reviews'] = df['Reviews'].astype(str).str.extract(r'(\d+\.?\d*)').astype(float)
+df['Ratings'] = df['Ratings'].astype(str).str.extract(r'(\d+)').astype(float)
+
+# Розрахунок глобального середнього значення ціни для заповнення пропущених значень
+global_mean_price = df['Price'].mean()
+
+# Розрахунок середніх цін за автором та жанром для кодування
+mean_prices_by_author = df.groupby('Author')['Price'].transform('mean')
+mean_prices_by_genre = df.groupby('Genre')['Price'].transform('mean')
+
+# Створення нових стовпців для закодованих автора та жанру на основі середніх цін
+df['Author_Encoded'] = mean_prices_by_author
+df['Genre_Encoded'] = mean_prices_by_genre
+
+# Заповнення будь-яких пропущених значень у закодованих стовпцях глобальним середнім значенням ціни
+df['Author_Encoded'] = df['Author_Encoded'].fillna(global_mean_price)
+df['Genre_Encoded'] = df['Genre_Encoded'].fillna(global_mean_price)
+
+# Визначення ознак (X) та цільової змінної (y) за допомогою оброблених даних
+X = df[['Reviews', 'Ratings', 'Author_Encoded', 'Genre_Encoded']]
+y = df['Price']
+
+# Видалення рядків, де y (Price) є NaN, оскільки вони не можуть бути використані для навчання
+# Забезпечення однакових індексів X та y після видалення NaN
+y.dropna(inplace=True)
+X = X.loc[y.index]
+
+# Розділення даних на тренувальний та тестовий набори (як і раніше)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Визначення числових та категоріальних ознак для подальшої обробки
+numerical_features = ['Reviews', 'Ratings']
+categorical_features = ['Author_Encoded', 'Genre_Encoded']
+
+# Масштабування числових ознак
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train[numerical_features]) # Масштабування тренувальних даних
+X_test_scaled = scaler.transform(X_test[numerical_features]) # Масштабування тестових даних
+
+# Об'єднання масштабованих числових ознак з категоріальними
+X_train_combined = np.hstack((X_train_scaled, X_train[categorical_features].values))
+X_test_combined = np.hstack((X_test_scaled, X_test[categorical_features].values))
+# --- Кінець доданої попередньої обробки даних для самостійного виконання ---
+
+# Ініціалізація моделі лінійної регресії
+model = LinearRegression()
+
+# Навчання моделі на тренувальних даних
+model.fit(X_train, y_train)
+
+# Прогнозування на тестовому наборі
+y_pred = model.predict(X_test)
+
+# Оцінка моделі Linear Regression
+evaluate_model(y_test, y_pred, "Linear Regression")
+
+# Графік порівняння реальних цін із прогнозованими моделлю лінійної регресії
+plt.figure(figsize=(10, 10)) # Встановлення розміру графіка
+plt.scatter(y_test, y_pred, alpha=0.7, color='orange') # Побудова точкового графіка: реальні vs прогнозовані ціни
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Побудова ідеальної лінії прогнозу
+plt.xlabel('Actual Prices') # Підпис осі X
+plt.ylabel('Predicted Prices (Linear Model)') # Підпис осі Y
+plt.title('Actual vs. Predicted Prices (Linear Regression Model)') # Заголовок графіка
+plt.grid(True) # Увімкнення сітки
+plt.show() # Відображення графіка
+
+# Визначення точок даних з найбільшими помилками прогнозування
+errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred, 'Absolute_Error': np.abs(y_test - y_pred)}) # Створення DataFrame з помилками
+errors = errors.sort_values(by='Absolute_Error', ascending=False) # Сортування за абсолютною помилкою
+
+print("\nTop 10 data points with the largest prediction errors:") # Виведення заголовка
+display.display(errors.head(10)) # Відображення 10 найбільших помилок
+
+# Ініціалізація моделі лінійної регресії для поліноміальних ознак
+poly_model = LinearRegression()
+
+# Навчання моделі з комбінованими ознаками (включаючи масштабовані числові та категоріальні)
+poly_model.fit(X_train_combined, y_train)
+
+# Прогнозування на тестовому наборі за допомогою поліноміальної моделі
+y_pred_poly = poly_model.predict(X_test_combined)
+
+# Оцінка моделі Polynomial Regression
+evaluate_model(y_test, y_pred_poly, "Polynomial Regression")
+
+plt.figure(figsize=(10, 10)) # Встановлення розміру графіка
+plt.scatter(y_test, y_pred_poly, alpha=0.7, color='purple') # Побудова точкового графіка
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ідеальна лінія прогнозу
+plt.xlabel('Actual Prices') # Підпис осі X
+plt.ylabel('Predicted Prices (Polynomial Regression)') # Підпис осі Y
+plt.title('Actual vs. Predicted Prices (Polynomial Regression)') # Заголовок графіка
+plt.grid(True) # Увімкнення сітки
+plt.show() # Відображення графіка
+
+# Визначення точок даних з найбільшими помилками прогнозування для поліноміальної моделі
+errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_poly, 'Absolute_Error': np.abs(y_test - y_pred_poly)}) # Створення DataFrame з помилками
+errors = errors.sort_values(by='Absolute_Error', ascending=False) # Сортування за абсолютною помилкою
+
+print("\nTop 10 data points with the largest prediction errors:") # Виведення заголовка
+display.display(errors.head(10)) # Відображення 10 найбільших помилок
+
+# Ініціалізація та навчання моделі Elastic Net
+elastic_net_model = ElasticNet(random_state=42) # Створення екземпляра ElasticNet з фіксованим random_state
+elastic_net_model.fit(X_train_combined, y_train) # Навчання моделі Elastic Net
+
+# Ініціалізація та навчання моделі Ridge
+ridge_net_model = Ridge(random_state=42) # Створення екземпляра Ridge з фіксованим random_state
+ridge_net_model.fit(X_train_combined, y_train) # Навчання моделі Ridge
+
+# Прогнозування на тестових даних за допомогою моделі Elastic Net
+y_pred_elastic = elastic_net_model.predict(X_test_combined)
+
+# Прогнозування на тестових даних за допомогою моделі Ridge
+y_pred_ridge = ridge_net_model.predict(X_test_combined)
+
+# Оцінка моделі Elastic Net
+mae_elastic = mean_absolute_error(y_test, y_pred_elastic) # Середня абсолютна помилка
+r2_elastic = r2_score(y_test, y_pred_elastic) # Коефіцієнт R2
+mse_elastic = mean_squared_error(y_test, y_pred_elastic) # Середня квадратична помилка
+
+evaluate_model(y_test, y_pred_elastic, "Elastic Net")
+
+plt.figure(figsize=(10, 10)) # Встановлення розміру графіка
+plt.scatter(y_test, y_pred_elastic, alpha=0.7) # Побудова точкового графіка
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ідеальна лінія прогнозу
+plt.xlabel('Actual Prices') # Підпис осі X
+plt.ylabel('Predicted Prices (Elastic Net Model)') # Підпис осі Y
+plt.title('Actual vs. Predicted Prices (Elastic Net Model)') # Заголовок графіка
+plt.grid(True) # Увімкнення сітки
+plt.show() # Відображення графіка
+
+# Визначення точок даних з найбільшими помилками прогнозування для Elastic Net
+errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_elastic, 'Absolute_Error': np.abs(y_test - y_pred_elastic)}) # Створення DataFrame з помилками
+errors = errors.sort_values(by='Absolute_Error', ascending=False) # Сортування за абсолютною помилкою
+
+print("\nTop 10 data points with the largest prediction errors:") # Виведення заголовка
+display.display(errors.head(10)) # Відображення 10 найбільших помилок
+
+
+evaluate_model(y_test, y_pred_ridge, "Ridge Regression")
+
+plt.figure(figsize=(10, 10)) # Встановлення розміру графіка
+plt.scatter(y_test, y_pred_ridge, alpha=0.7, color='green') # Побудова точкового графіка
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ідеальна лінія прогнозу
+plt.xlabel('Actual Prices') # Підпис осі X
+plt.ylabel('Predicted Prices (Ridge Model)') # Підпис осі Y
+plt.title('Actual vs. Predicted Prices (Ridge Model)') # Заголовок графіка
+plt.grid(True) # Увімкнення сітки
+plt.show() # Відображення графіка
+
+# Визначення точок даних з найбільшими помилками прогнозування для Ridge
+errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_ridge, 'Absolute_Error': np.abs(y_test - y_pred_ridge)}) # Створення DataFrame з помилками
+errors = errors.sort_values(by='Absolute_Error', ascending=False) # Сортування за абсолютною помилкою
+
+print("\nTop 10 data points with the largest prediction errors:") # Виведення заголовка
+display.display(errors.head(10)) # Відображення 10 найбільших помилок
+
+# Ініціалізація та навчання моделі RandomForestRegressor
+model = RandomForestRegressor(n_estimators=100, random_state=42) # Створення екземпляра RandomForestRegressor
+model.fit(X_train, y_train) # Навчання моделі
+
+# Здійснення прогнозів за допомогою навченої моделі
+y_pred_rf = model.predict(X_test)
+
+# Оцінка моделі RandomForestRegressor
+evaluate_model(y_test, y_pred_rf, "RandomForestRegressor")
+
+plt.figure(figsize=(10, 10)) # Встановлення розміру графіка
+plt.scatter(y_test, y_pred_rf, alpha=0.7, color='yellow') # Побудова точкового графіка
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ідеальна лінія прогнозу
+plt.xlabel('Actual Prices') # Підпис осі X
+plt.ylabel('Predicted Prices (RandomForestRegressor Model)') # Підпис осі Y
+plt.title('Actual vs. Predicted Prices (RandomForestRegressor Regression Model)') # Заголовок графіка
+plt.grid(True) # Увімкнення сітки
+plt.show() # Відображення графіка
+
+# Визначення точок даних з найбільшими помилками прогнозування для RandomForestRegressor
+errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_rf, 'Absolute_Error': np.abs(y_test - y_pred_rf)}) # Створення DataFrame з помилками
+errors = errors.sort_values(by='Absolute_Error', ascending=False) # Сортування за абсолютною помилкою
+
+print("\nTop 10 data points with the largest prediction errors:") # Виведення заголовка
+display.display(errors.head(10)) # Відображення 10 найбільших помилок
+
+# Ініціалізація та навчання моделі GradientBoostingRegressor
+gbr_model = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42) # Створення екземпляра GradientBoostingRegressor
+gbr_model.fit(X_train, y_train) # Навчання моделі
+
+# Здійснення прогнозів за допомогою навченої моделі
+y_pred_gbr = gbr_model.predict(X_test)
+
+# Оцінка моделі GradientBoostingRegressor
+evaluate_model(y_test, y_pred_gbr, "GradientBoostingRegressor")
+
+plt.figure(figsize=(10, 10)) # Встановлення розміру графіка
+plt.scatter(y_test, y_pred_gbr, alpha=0.7, color='brown') # Побудова точкового графіка
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], '--r', linewidth=2) # Ідеальна лінія прогнозу
+plt.xlabel('Actual Prices') # Підпис осі X
+plt.ylabel('Predicted Prices (GradientBoostingRegressor Model)') # Підпис осі Y
+plt.title('Actual vs. Predicted Prices (GradientBoostingRegressor Model)') # Заголовок графіка
+plt.grid(True) # Увімкнення сітки
+plt.show() # Відображення графіка
+
+# Визначення точок даних з найбільшими помилками прогнозування для GradientBoostingRegressor
+errors = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred_gbr, 'Absolute_Error': np.abs(y_test - y_pred_gbr)}) # Створення DataFrame з помилками
+errors = errors.sort_values(by='Absolute_Error', ascending=False) # Сортування за абсолютною помилкою
+
+print("\nTop 10 data points with the largest prediction errors:") # Виведення заголовка
+display.display(errors.head(10)) # Відображення 10 найбільших помилок
+
+# ============
 
 import pandas as pd
 df = pd.read_csv('/content/Book price/train.csv', encoding='latin1', sep=';')
