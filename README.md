@@ -53,6 +53,58 @@ max_price = df['Price'].max()
 print(f"Мінімальна ціна: {min_price:.2f}")
 print(f"Максимальна ціна: {max_price:.2f}")
 
+# Оцінки моделей
+def evaluate_model(y_true, y_pred, model_name):
+    mae = mean_absolute_error(y_true, y_pred)
+    mse = mean_squared_error(y_true, y_pred)
+    # Додаємо невелике значення до y_true, щоб уникнути ділення на нуль при обчисленні MAPE
+    mape = np.mean(np.abs((y_true - y_pred) / (y_true + 1e-10))) * 100
+    r2 = r2_score(y_true, y_pred)
+    accuracy = 100 - mape
+    print(f"\n{model_name} Model Evaluation:") # Adjusted print statement to be generic
+    print(f"  Mean Absolute Error (MAE): {mae:.2f}")
+    print(f"  Mean Squared Error (MSE): {mse:.2f}")
+    print(f"  Mean Absolute Percentage Error (MAPE): {mape:.2f}%")
+    print(f"  R-squared (R2): {r2:.2f}")
+    print(f"  Accuracy: {accuracy:.2f}%")
+    return mae, mse, mape, r2, accuracy
+
+# Графік порівняння реальних цін із прогнозованими моделлю 
+def plot_predictions(y_true, y_pred, model_title, plot_color):
+    """
+    Generates a scatter plot comparing actual vs. predicted values for a given model.
+
+    Args:
+        y_true (pd.Series): Actual values.
+        y_pred (np.array): Predicted values.
+        model_title (str): Title for the plot and Y-axis label.
+        plot_color (str): Color for the scatter points.
+    """
+    plt.figure(figsize=(10, 10))
+    plt.scatter(y_true, y_pred, alpha=0.7, color=plot_color)
+    plt.plot([min(y_true), max(y_true)], [min(y_true), max(y_true)], '--r', linewidth=2)
+    plt.xlabel('Actual Prices')
+    plt.ylabel(f'Predicted Prices ({model_title})')
+    plt.title(f'Actual vs. Predicted Prices ({model_title})')
+    plt.grid(True)
+    plt.show()
+
+# Визначення точок даних з найбільшими помилками прогнозування
+def display_top_errors(y_true, y_pred, model_name, top_n=10):
+    """
+    Identifies and displays the top N data points with the largest prediction errors.
+
+    Args:
+        y_true (pd.Series): Actual values.
+        y_pred (np.array): Predicted values.
+        model_name (str): Name of the model for display purposes.
+        top_n (int): The number of top errors to display.
+    """
+    errors_df = pd.DataFrame({'Actual': y_true, 'Predicted': y_pred, 'Absolute_Error': np.abs(y_true - y_pred)})
+    errors_df = errors_df.sort_values(by='Absolute_Error', ascending=False)
+    print(f"\nTop {top_n} data points with the largest prediction errors for {model_name}:")
+    display.display(errors_df.head(top_n))
+
 # --- Початок доданої попередньої обробки даних для самостійного виконання ---
 # Перетворення стовпця 'Price' на числовий формат, NaN для некоректних значень
 df['Price'] = pd.to_numeric(df['Price'], errors='coerce')
