@@ -26,11 +26,15 @@ import base64
 # Імпорт модуля для відображення об'єктів в IPython
 import IPython.display as display
 
+# -----------------------
+
 # Завантаження даних
 # Завантаження даних з Excel
 #df = pd.read_excel('train.xlsx')
 # Завантаження даних з CSV-файлу
 df = pd.read_csv('/content/Book price/train.csv', encoding='latin1', sep=';')
+
+# -----------------------
 
 # Виведення інформації про DataFrame (типи даних, кількість ненульових значень)
 df.info()
@@ -52,6 +56,8 @@ max_price = df['Price'].max()
 
 print(f"Мінімальна ціна: {min_price:.2f}")
 print(f"Максимальна ціна: {max_price:.2f}")
+
+# -----------------------
 
 # Оцінки моделей
 def evaluate_model(y_true, y_pred, model_name):
@@ -104,6 +110,8 @@ def display_top_errors(y_true, y_pred, model_name, top_n=10):
     errors_df = errors_df.sort_values(by='Absolute_Error', ascending=False) # Сортування за абсолютною помилкою
     print(f"\nTop {top_n} data points with the largest prediction errors for {model_name}:")
     display.display(errors_df.head(top_n))
+    
+# -----------------------
 
 # --- Початок доданої попередньої обробки даних для самостійного виконання ---
 # Перетворення стовпця 'Price' на числовий формат, NaN для некоректних значень
@@ -164,6 +172,8 @@ X_train_combined = np.hstack((X_train_scaled, X_train[categorical_features].valu
 X_test_combined = np.hstack((X_test_scaled, X_test[categorical_features].values))
 # --- Кінець доданої попередньої обробки даних для самостійного виконання ---
 
+# -----------------------
+
 # Ініціалізація моделі лінійної регресії
 model = LinearRegression()
 
@@ -181,6 +191,8 @@ plot_predictions(y_test, y_pred, "Linear Regression Model", 'orange')
 
 # Визначення точок даних з найбільшими помилками прогнозування
 display_top_errors(y_test, y_pred, "Linear Regression")
+
+# -----------------------
 
 # Оцінка моделі
 # mae = mean_absolute_error(y_test, y_pred)
@@ -214,6 +226,7 @@ display_top_errors(y_test, y_pred, "Linear Regression")
 # print("\nTop 10 data points with the largest prediction errors:")
 # display.display(errors.head(10))
 
+# -----------------------
 # Ініціалізація моделі лінійної регресії для поліноміальних ознак
 poly_model = LinearRegression()
 
@@ -231,6 +244,8 @@ plot_predictions(y_test, y_pred_poly, "Polynomial Regression", 'purple')
 
 # Визначення точок даних з найбільшими помилками прогнозування для поліноміальної моделі
 display_top_errors(y_test, y_pred_poly, "Polynomial Regression")
+
+# -----------------------
 
 # Оцінка моделі
 # mae_poly = mean_absolute_error(y_test, y_pred_poly)
@@ -260,6 +275,8 @@ display_top_errors(y_test, y_pred_poly, "Polynomial Regression")
 
 # print("\nTop 10 data points with the largest prediction errors:")
 # display.display(errors.head(10))
+
+# -----------------------
 
 # Initialize and train Elastic Net model
 elastic_net_model = ElasticNet(random_state=42)
@@ -292,6 +309,8 @@ plot_predictions(y_test, y_pred_ridge, "Ridge Model", 'green')
 
 # Визначення точок даних з найбільшими помилками прогнозування для Ridge
 display_top_errors(y_test, y_pred_ridge, "Ridge Regression")
+
+# -----------------------
 
 # Evaluate Elastic Net model
 # mae_elastic = mean_absolute_error(y_test, y_pred_elastic)
@@ -356,6 +375,8 @@ display_top_errors(y_test, y_pred_ridge, "Ridge Regression")
 # print("\nTop 10 data points with the largest prediction errors:")
 # display.display(errors.head(10))
 
+# -----------------------
+
 # Train the model
 model = RandomForestRegressor(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
@@ -371,6 +392,8 @@ plot_predictions(y_test, y_pred_rf, "RandomForestRegressor Model", 'yellow')
 
 # Визначення точок даних з найбільшими помилками прогнозування для RandomForestRegressor
 display_top_errors(y_test, y_pred_rf, "RandomForestRegressor")
+
+# -----------------------
 
 # Оцінка моделі RandomForestRegressor
 # mae_rf = mean_absolute_error(y_test, y_pred_rf)
@@ -403,6 +426,8 @@ display_top_errors(y_test, y_pred_rf, "RandomForestRegressor")
 # print("\nTop 10 data points with the largest prediction errors:")
 # display.display(errors.head(10))
 
+# -----------------------
+
 # Train the GradientBoostingRegressor model
 gbr_model = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
 gbr_model.fit(X_train, y_train)
@@ -418,6 +443,8 @@ plot_predictions(y_test, y_pred_gbr, "GradientBoostingRegressor Model", 'brown')
 
 # Визначення точок даних з найбільшими помилками прогнозування для GradientBoostingRegressor
 display_top_errors(y_test, y_pred_gbr, "GradientBoostingRegressor")
+
+# -----------------------
 
 # Evaluate the GradientBoostingRegressor model
 # mae_gbr = mean_absolute_error(y_test, y_pred_gbr)
